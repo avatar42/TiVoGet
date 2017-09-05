@@ -14,6 +14,9 @@ OnePass file is named {TivoName}_sp.csv
 Columns are PRIORITY	SHOW	INCLUDE	SEASON	CHANNEL	RECORD	KEEP	NUM	START	END
 
 Now Playing List is named {TivoName}_npl.csv
-Columns are SHOW	DATE	SORTABLE DATE	CHANNEL	DURATION	SIZE (GB)	BITRATE (Mbps)	watchedTime	isNew
+Columns are SHOW	episode	title	DATE	SORTABLE DATE	CHANNEL	DURATION	SIZE (GB)	BITRATE (Mbps)	watchedTime	isNew
 
-Note the watchedTime and isNew columns are not in the kmttg exports.
+Note kmttg's SHOW is has been split back up into  SHOW(show name) ,episode(number) and title (episode name)
+The watchedTime(watched seconds into show) and isNew(new vs rerun) columns are not in the kmttg exports.
+
+Planning on direct to google sheet option next.

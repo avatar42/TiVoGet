@@ -707,7 +707,7 @@ public class TiVoGet {
 			BufferedWriter ofp = new BufferedWriter(new FileWriter(file));
 			JSONArray todo = getNPL();
 			if (todo != null) {
-				ofp.write("SHOW,DATE,SORTABLE DATE,CHANNEL,DURATION,SIZE (GB),BITRATE (Mbps),watchedTime,isNew\r\n");
+				ofp.write("SHOW,episode,title,DATE,SORTABLE DATE,CHANNEL,DURATION,SIZE (GB),BITRATE (Mbps),watchedTime,isNew\r\n");
 				for (int i = 0; i < todo.length(); ++i) {
 					JSONObject json = todo.getJSONObject(i);
 					String startString = null, endString = null, duration = "";
@@ -767,9 +767,33 @@ public class TiVoGet {
 						sdf = new SimpleDateFormat("yyyyMMddHHmm");
 						date_sortable = sdf.format(start);
 					}
-					String show = removeLeadingTrailingSpaces(makeShowTitle(rec));
+					String show = "";
+					String episode = "";
+					String title = "";
+
+					if (rec.has("title"))
+						show += rec.getString("title");
+					if (rec.has("seasonNumber") && rec.has("episodeNum")) {
+						episode += "Ep " + rec.get("seasonNumber")
+								+ String.format("%02d", rec.getJSONArray("episodeNum").get(0));
+					}
+					if (rec.has("movieYear"))
+						episode += rec.get("movieYear");
+					if (rec.has("subtitle"))
+						title += rec.getString("subtitle");
+					if (rec.has("subscriptionIdentifier")) {
+						JSONArray a = rec.getJSONArray("subscriptionIdentifier");
+						if (a.length() > 0) {
+							if (a.getJSONObject(0).has("subscriptionType")) {
+								String type = a.getJSONObject(0).getString("subscriptionType");
+								if (type.equals("singleTimeChannel") || type.equals("repeatingTimeChannel"))
+									title = " Manual:" + title;
+							}
+						}
+					}
+
 					String channel = removeLeadingTrailingSpaces(makeChannelName(rec));
-					ofp.write("\"" + show + "\"," + date + "," + date_sortable + "," + channel + "," + duration + ","
+					ofp.write("\"" + show + "\",\"" + episode+ "\",\"" + title + "\"," +date + "," + date_sortable + "," + channel + "," + duration + ","
 							+ size + "," + bitrate + "," + watchedTime + "," + isNew + "\r\n");
 				}
 			} else {
