@@ -9,7 +9,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.net.URL;
 import java.net.URLEncoder;
 import java.security.KeyManagementException;
 import java.security.KeyStore;
@@ -73,9 +72,10 @@ public class TiVoGet {
 	// my changes
 	// private String keyFile = "/tivo.p12";
 	// private String keyPass = "password";
-	// from kmttg
+	// TiVo cert pulled from kmttg 
 	private String keyFile = "/cdata.p12";
-	private String keyPass = "LwrbLEFYvG"; // expires 4/29/2018
+	private String keyPass = "5vPNhg6sV4tD"; // expires 12/18/2020
+    //String keyPass = "LwrbLEFYvG"; // expires 4/29/2018
 
 	public void init(String tivoname, String MAK, String IP, int use_port) {
 		this.tivoName = tivoname;
@@ -133,7 +133,7 @@ public class TiVoGet {
 				}
 				KeyManagerFactory fac = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
 				fac.init(keyStore, keyPass.toCharArray());
-				SSLContext context = SSLContext.getInstance("TLS");
+				SSLContext context = SSLContext.getInstance("TLSv1.2");
 				TrustManager[] tm = new TrustManager[] { new NaiveTrustManager() };
 				context.init(fac.getKeyManagers(), tm, new SecureRandom());
 				sslSocketFactory = context.getSocketFactory();
@@ -707,7 +707,8 @@ public class TiVoGet {
 			BufferedWriter ofp = new BufferedWriter(new FileWriter(file));
 			JSONArray todo = getNPL();
 			if (todo != null) {
-				ofp.write("SHOW,episode,title,DATE,SORTABLE DATE,CHANNEL,DURATION,SIZE (GB),BITRATE (Mbps),watchedTime,isNew\r\n");
+				ofp.write(
+						"SHOW,episode,title,DATE,SORTABLE DATE,CHANNEL,DURATION,SIZE (GB),BITRATE (Mbps),watchedTime,isNew\r\n");
 				for (int i = 0; i < todo.length(); ++i) {
 					JSONObject json = todo.getJSONObject(i);
 					String startString = null, endString = null, duration = "";
@@ -793,8 +794,9 @@ public class TiVoGet {
 					}
 
 					String channel = removeLeadingTrailingSpaces(makeChannelName(rec));
-					ofp.write("\"" + show + "\",\"" + episode+ "\",\"" + title + "\"," +date + "," + date_sortable + "," + channel + "," + duration + ","
-							+ size + "," + bitrate + "," + watchedTime + "," + isNew + "\r\n");
+					ofp.write("\"" + show + "\",\"" + episode + "\",\"" + title + "\"," + date + "," + date_sortable
+							+ "," + channel + "," + duration + "," + size + "," + bitrate + "," + watchedTime + ","
+							+ isNew + "\r\n");
 				}
 			} else {
 				log.error("Error getting NPL list for TiVo: " + tivoName);
@@ -1066,18 +1068,28 @@ public class TiVoGet {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		TiVoGet tivo = new TiVoGet();
-		if (args.length < 3) {
-			System.out.println("USAGE: TiVoGet TivoName MediaAccessKey TivoIP [OutputDirectory]");
-			System.exit(1);
+		try {
+			TiVoGet tivo = new TiVoGet();
+			if (args.length < 3) {
+				System.out.println("USAGE: TiVoGet TivoName MediaAccessKey TivoIP [OutputDirectory]");
+				System.exit(1);
+			}
+			if (args.length > 3) {
+				tivo.setExportDir(args[3]);
+			}
+			try {
+				tivo.init(args[0], args[1], args[2], 1413);
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			tivo.exportTodos();
+			tivo.exportNPL();
+			tivo.exportOnePass();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
-		if (args.length > 3) {
-			tivo.setExportDir(args[3]);
-		}
-		tivo.init(args[0], args[1], args[2], 1413);
-		tivo.exportTodos();
-		tivo.exportNPL();
-		tivo.exportOnePass();
 	}
 
 	public void setExportDir(String exportDir) {
