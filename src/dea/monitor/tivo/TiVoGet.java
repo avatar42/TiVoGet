@@ -72,10 +72,10 @@ public class TiVoGet {
 	// my changes
 	// private String keyFile = "/tivo.p12";
 	// private String keyPass = "password";
-	// TiVo cert pulled from kmttg 
+	// TiVo cert pulled from kmttg
 	private String keyFile = "/cdata.p12";
 	private String keyPass = "5vPNhg6sV4tD"; // expires 12/18/2020
-    //String keyPass = "LwrbLEFYvG"; // expires 4/29/2018
+	// String keyPass = "LwrbLEFYvG"; // expires 4/29/2018
 
 	public void init(String tivoname, String MAK, String IP, int use_port) {
 		this.tivoName = tivoname;
@@ -637,19 +637,27 @@ public class TiVoGet {
 						channel = removeLeadingTrailingSpaces(makeChannelName(idSetSource));
 					}
 					String show = removeLeadingTrailingSpaces(json.getString("title"));
-					ofp.write(priority + ",\"" + show + "\"," + incl + "," + startSeasonOrYear + "," + channel + ","
+					ofp.write(priority + "," + addQuotes(show) + "," + incl + "," + startSeasonOrYear + "," + channel + ","
 							+ showStatus + "," + keepBehavior + "," + maxRecordings + "," + startTimePadding + ","
 							+ endTimePadding + "\r\n");
 				}
 			} else {
-				log.error("Error getting ToDo list for TiVo: " + tivoName);
+				log.error("Error getting OnePass list for TiVo: " + tivoName);
 			}
 			ofp.close();
-			System.out.println("OnePassExportCSV completed successfully to " + file.getAbsolutePath());
+			System.out.println("OnePassExport CSV completed successfully to " + file.getAbsolutePath());
 		} catch (Exception e) {
-			log.error("rpc OnePassExportCSV error - ", e);
+			log.error("rpc OnePassExport CSV error - ", e);
 			return;
 		}
+	}
+
+	private String addQuotes(String s) {
+		if (s != null && s.indexOf(',') > -1) {
+			return "\"" + s + "\"";
+		}
+
+		return s;
 	}
 
 	// Create CSV file from todo list
@@ -686,7 +694,8 @@ public class TiVoGet {
 					}
 					String show = removeLeadingTrailingSpaces(makeShowTitle(json));
 					String channel = removeLeadingTrailingSpaces(makeChannelName(json));
-					ofp.write(date + "," + date_sortable + ",\"" + show + "\"," + channel + "," + duration + "\r\n");
+					ofp.write(addQuotes( date) + "," + date_sortable + "," + addQuotes(show) + "," + addQuotes(channel) + ","
+							+ duration + "\r\n");
 				}
 			} else {
 				log.error("Error getting ToDo list for TiVo: " + tivoName);
@@ -758,7 +767,7 @@ public class TiVoGet {
 						duration = removeLeadingTrailingSpaces(millisecsToHMS(end - start, false));
 					}
 					if (size != 0 && ms != 0) {
-						bitrate = (size * 8) / (ms / 1000) / 1024 / 1024;
+						bitrate = (int) ((size * 8) / (ms / 1000) / 1024 / 1024);
 					}
 					String date = "";
 					String date_sortable = "";
@@ -794,7 +803,7 @@ public class TiVoGet {
 					}
 
 					String channel = removeLeadingTrailingSpaces(makeChannelName(rec));
-					ofp.write("\"" + show + "\",\"" + episode + "\",\"" + title + "\"," + date + "," + date_sortable
+					ofp.write(addQuotes( show) + "," + addQuotes(episode) + "," + addQuotes(title) + "," + date + "," + date_sortable
 							+ "," + channel + "," + duration + "," + size + "," + bitrate + "," + watchedTime + ","
 							+ isNew + "\r\n");
 				}
